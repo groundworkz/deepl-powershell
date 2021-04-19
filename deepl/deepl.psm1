@@ -139,6 +139,12 @@
   Returns only the translated text.
   If set to $false, this module returns the full API response.
 
+ .Parameter APIMode
+  (Optional)
+  Can be used to set the API to "free" mode.
+  Defaults to Null.
+  Valid entries are Null, "-free"
+
  .Example
    # Translate text into English
    Get-DeeplTranslation -DeeplAuthKey "xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" -InputText "Hallo Wereld"
@@ -162,9 +168,10 @@ function Get-DeeplTranslation {
         [Parameter(Mandatory = $false)][String]$OutlineDetection,
         [Parameter(Mandatory = $false)][String]$SplittingTags,
         [Parameter(Mandatory = $false)][String]$IgnoreTags,
-        [Parameter(Mandatory = $false)][bool]$TranslatedTextOnly = $true
+        [Parameter(Mandatory = $false)][Bool]$TranslatedTextOnly = $true,
+        [Parameter(Mandatory = $false)][ValidateSet($null,"-free")][string]$APIMode = $null
     )
-    #Translate the description to english using deeply.
+
     $DeeplRequestBody = @{
         auth_key    = $DeeplAuthKey
         text        = $InputText
@@ -181,7 +188,7 @@ function Get-DeeplTranslation {
         ignore_tags = $IgnoreTags
     }
     try {
-        $Response = Invoke-WebRequest -Method POST -Uri https://api.deepl.com/v2/translate -body $DeeplRequestBody -ContentType "application/x-www-form-urlencoded" -ErrorAction Stop
+        $Response = Invoke-WebRequest -Method POST -Uri "https://api$($APIMode).deepl.com/v2/translate" -body $DeeplRequestBody -ContentType "application/x-www-form-urlencoded" -ErrorAction Stop
     }
     catch [System.Net.WebException] { 
         $_.Exception.Message
