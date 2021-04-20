@@ -4,7 +4,7 @@
 
  .Description
   Translates your text into different languages.
-  Also allows you to specify input languages, fomrality and split sentences.
+  Also allows you to specify input languages, fomrality, split sentences, get supported languages and check usage.
 
  .Parameter DeeplAuthKey
   Use your deepl API Key, which can be found here: https://www.deepl.com/pro-account/plan
@@ -145,15 +145,29 @@
   Defaults to Null.
   Valid entries are Null, "-free"
 
+ .Parameter APIMode
+  (Optional)
+  Sets whether source or target languages should be listed. Possible options are:
+  "source" (default) - For languages that can be used in the source_lang parameter of /translate requests.
+  "target" - For languages that can be used in the target_lang parameter of /translate requests. 
+
  .Example
    # Translate text into English
-   Get-DeeplTranslation -DeeplAuthKey "xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" -InputText "Hallo Wereld"
+   Get-DeeplTextTranslation -DeeplAuthKey "xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" -InputText "Hallo Wereld"
 
  .Example
    # Translate text into Dutch
-   Get-DeeplTranslation -DeeplAuthKey "xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" -InputText "Привет мир" -SourceLanguage "RU" -TargetLanguage "NL" -Formality "more" -TranslatedTextOnly $false
+   Get-DeeplTextTranslation -DeeplAuthKey "xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" -InputText "Привет мир" -SourceLanguage "RU" -TargetLanguage "NL" -Formality "more" -TranslatedTextOnly $false
 
-#>
+ .Example
+   # Get supported source languages
+   Get-DeeplSupportedLanguages -DeeplAuthKey "xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" -Type "source"
+
+ .Example
+   # Check current usage
+   Get-DeeplUsage -DeeplAuthKey "xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+   #>
 
 function Set-DeeplUri {
     param (
@@ -167,9 +181,9 @@ function Get-DeeplTextTranslation {
         [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][string]$InputText,
         [Parameter(Mandatory = $false)][ValidateNotNullOrEmpty()][String]$TargetLanguage = "EN", # Default is English
         [Parameter(Mandatory = $false)][String]$SourceLanguage,
-        [Parameter(Mandatory = $false)][ValidateSet("0", "1", "nonewlines")][String]$SplitSentences = "1",
-        [Parameter(Mandatory = $false)][ValidateSet("0", "1")][String]$PreserverFormatting = "0",
-        [Parameter(Mandatory = $false)][ValidateSet("default", "more", "less")][String]$Formality = "default",
+        [Parameter(Mandatory = $false)][ValidateSet("0", "1", "nonewlines")][String]$SplitSentences,
+        [Parameter(Mandatory = $false)][ValidateSet("0", "1")][String]$PreserverFormatting,
+        [Parameter(Mandatory = $false)][ValidateSet("default", "more", "less")][String]$Formality,
         [Parameter(Mandatory = $false)][String]$TagHandling,
         [Parameter(Mandatory = $false)][String]$NonSplittingTags,
         [Parameter(Mandatory = $false)][String]$OutlineDetection,
