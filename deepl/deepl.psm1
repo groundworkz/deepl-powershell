@@ -224,6 +224,9 @@ function Get-DeeplTextTranslation {
             Return $Response.Content
         }
     }
+    else {
+        Write-Host "Error. HTTP Response code: [$($Response.StatusCode)]"
+    }
 }
 
 function Get-DeeplUsage {
@@ -246,6 +249,9 @@ function Get-DeeplUsage {
     }
     if ($Response.StatusCode -eq 200) {
         Return $Response.Content
+    }
+    else {
+        Write-Host "Error. HTTP Response code: [$($Response.StatusCode)]"
     }
 }
 function Get-DeeplSupportedLanguages {
@@ -270,15 +276,18 @@ function Get-DeeplSupportedLanguages {
     if ($Response.StatusCode -eq 200) {
         Return $Response.Content
     }
+    else {
+        Write-Host "Error. HTTP Response code: [$($Response.StatusCode)]"
+    }
 }
 
-Export-ModuleMember -Function Get-DeeplTextTranslation
-Export-ModuleMember -Function Get-DeeplUsage
-Export-ModuleMember -Function Get-DeeplSupportedLanguages
+    Export-ModuleMember -Function Get-DeeplTextTranslation
+    Export-ModuleMember -Function Get-DeeplUsage
+    Export-ModuleMember -Function Get-DeeplSupportedLanguages
 
-# Todo
-# function TranslateDocuments {
-#    UploadDocument
-#    CheckStatus
-#    Downloading
-# }
+    # Todo
+    # function TranslateDocuments {
+    #    UploadDocument
+    #    CheckStatus
+    #    Downloading
+    # }
