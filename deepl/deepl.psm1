@@ -254,13 +254,58 @@ function Get-DeeplSupportedLanguages {
     Return (Invoke-DeeplRequest -DeeplRequestBody $DeeplRequestBody -APIService "languages" -APIMode $APIMode)
 }
 
-Export-ModuleMember -Function Get-DeeplTextTranslation
-Export-ModuleMember -Function Get-DeeplUsage
-Export-ModuleMember -Function Get-DeeplSupportedLanguages
-
-# Todo
-# function TranslateDocuments {
-#    UploadDocument
-#    CheckStatus
-#    Downloading
+# Not working at the moment
+# function Get-DeeplDocumentTranslation {
+#     param (
+#         [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][String]$DeeplAuthKey,
+#         [Parameter(Mandatory = $false)][ValidateNotNullOrEmpty()][String]$TargetLanguage = "EN", # Default is English
+#         [Parameter(Mandatory = $false)][String]$SourceLanguage,
+#         [Parameter(Mandatory = $true)][String]$File,
+#         [Parameter(Mandatory = $false)][String]$FileName,
+#         [Parameter(Mandatory = $false)][ValidateSet($null, "-free")][string]$APIMode = $null
+#     )
+#     $DeeplRequestBody = @{
+#         auth_key    = $DeeplAuthKey
+#         target_lang = $TargetLanguage
+#         source_lang = $SourceLanguage
+#         file        = $File
+#         filename    = $FileName
+#     }
+#     $TranslatedResponse = Invoke-DeeplRequest -DeeplRequestBody $DeeplRequestBody -APIService "document" -APIMode $APIMode -ContentType "multipart/form-data"
+#     if ($TranslatedTextOnly) {
+#         Return ($TranslatedResponse | ConvertFrom-Json).translations.text
+#     }
+#     else {
+#         Return $TranslatedResponse
+#     }
 # }
+
+function get-deepldocumentstatus {
+    param (
+        [Parameter(Mandatory = $true)][String]$DeeplAuthKey,
+        [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][String]$DocumentKey,
+        [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][String]$DocumentId,
+        [Parameter(Mandatory = $false)][ValidateSet($null, "-free")][string]$APIMode = $null
+    )
+    $DeeplRequestBody = @{
+        auth_key     = $DeeplAuthKey
+        document_key = $DocumentKey
+    }
+    Return (Invoke-DeeplRequest -DeeplRequestBody $DeeplRequestBody -APIService "document/$($DocumentId)" -APIMode $APIMode)
+}
+
+function get-deepldocumentresult {
+    param (
+        [Parameter(Mandatory = $true)][String]$DeeplAuthKey,
+        [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][String]$DocumentKey,
+        [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][String]$DocumentId,
+        [Parameter(Mandatory = $false)][ValidateSet($null, "-free")][string]$APIMode = $null
+    )
+    $DeeplRequestBody = @{
+        auth_key     = $DeeplAuthKey
+        document_key = $DocumentKey
+    }
+    Return (Invoke-DeeplRequest -DeeplRequestBody $DeeplRequestBody -APIService "document/$($DocumentId)/result" -APIMode $APIMode)
+}
+
+Export-ModuleMember -Function Get-DeeplTextTranslation, Get-DeeplUsage, Get-DeeplSupportedLanguages, Get-DeeplDocumentTranslation, get-deepldocumentstatus, get-deepldocumentresult
