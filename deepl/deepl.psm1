@@ -169,11 +169,26 @@
 
    #>
 
-function Set-DeeplUri {
+function Invoke-DeeplRequest {
     param (
-        [Parameter(Mandatory = $false)][string]$APIMode
+        [Parameter(Mandatory = $true)][ValidateSet("translate", "usage", "languages")][string]$APIService,
+        [Parameter(Mandatory = $true)][System.Collections.Hashtable]$DeeplRequestBody,
+        [Parameter(Mandatory = $false)][String]$APIMode,
+        [Parameter(Mandatory = $false)][String]$ContentType = "application/x-www-form-urlencoded"
     )
-    Return "https://api$($APIMode).deepl.com/v2"
+    try {
+        $Response = Invoke-WebRequest -Method POST -Uri "https://api$($APIMode).deepl.com/v2/$($APIService)" -body $DeeplRequestBody -ContentType $ContentType -ErrorAction Stop
+    }
+    catch [System.Net.WebException] { 
+        Write-Host $_.Exception.Message -ForegroundColor Red
+    }
+    if ($Response.StatusCode -eq 200) {
+        Return $Response.Content
+    }
+    elseif ($Response.StatusCode) {
+        Write-Host "Error. HTTP Response code: [$($Response.StatusCode)]" -ForegroundColor Red
+        Break
+    }
 }
 function Get-DeeplTextTranslation {
     param (
@@ -192,7 +207,6 @@ function Get-DeeplTextTranslation {
         [Parameter(Mandatory = $false)][Bool]$TranslatedTextOnly = $true,
         [Parameter(Mandatory = $false)][ValidateSet($null, "-free")][string]$APIMode = $null
     )
-
     $DeeplRequestBody = @{
         auth_key            = $DeeplAuthKey
         text                = $InputText
@@ -208,24 +222,12 @@ function Get-DeeplTextTranslation {
         splitting_tags      = $SplittingTags
         ignore_tags         = $IgnoreTags
     }
-    $Uri = Set-DeeplUri $APIMode
-    try {
-        $Response = Invoke-WebRequest -Method POST -Uri "$($Uri)/translate" -body $DeeplRequestBody -ContentType "application/x-www-form-urlencoded" -ErrorAction Stop
-    }
-    catch [System.Net.WebException] { 
-        $_.Exception.Message
-    }
-    if ($Response.StatusCode -eq 200) {
-        if ($TranslatedTextOnly) {
-            $TranslatedText = ($Response.Content | ConvertFrom-Json).translations.text
-            Return $TranslatedText
-        }
-        else {
-            Return $Response.Content
-        }
+    $TranslatedResponse = Invoke-DeeplRequest -DeeplRequestBody $DeeplRequestBody -APIService "translate" -APIMode $APIMode
+    if ($TranslatedTextOnly) {
+        Return ($TranslatedResponse | ConvertFrom-Json).translations.text
     }
     else {
-        Write-Host "Error. HTTP Response code: [$($Response.StatusCode)]"
+        Return $TranslatedResponse
     }
 }
 
@@ -234,25 +236,10 @@ function Get-DeeplUsage {
         [Parameter(Mandatory = $true)][String]$DeeplAuthKey,
         [Parameter(Mandatory = $false)][ValidateSet($null, "-free")][string]$APIMode = $null
     )
-    $Uri = Set-DeeplUri $APIMode
-
     $DeeplRequestBody = @{
-        auth_key    = $DeeplAuthKey
-        target_lang = $TargetLanguage
+        auth_key = $DeeplAuthKey
     }
-
-    try {
-        $Response = Invoke-WebRequest -Method POST -Uri "$($Uri)/usage" -body $DeeplRequestBody -ContentType "application/x-www-form-urlencoded" -ErrorAction Stop
-    }
-    catch [System.Net.WebException] { 
-        $_.Exception.Message
-    }
-    if ($Response.StatusCode -eq 200) {
-        Return $Response.Content
-    }
-    else {
-        Write-Host "Error. HTTP Response code: [$($Response.StatusCode)]"
-    }
+    Return (Invoke-DeeplRequest -DeeplRequestBody $DeeplRequestBody -APIService "usage" -APIMode $APIMode)
 }
 function Get-DeeplSupportedLanguages {
     param (
@@ -260,34 +247,20 @@ function Get-DeeplSupportedLanguages {
         [Parameter(Mandatory = $false)][ValidateSet("source", "target")][String]$Type,
         [Parameter(Mandatory = $false)][ValidateSet($null, "-free")][string]$APIMode = $null
     )
-    $Uri = Set-DeeplUri $APIMode
-
     $DeeplRequestBody = @{
         auth_key = $DeeplAuthKey
         type     = $type
     }
-
-    try {
-        $Response = Invoke-WebRequest -Method POST -Uri "$($Uri)/languages" -body $DeeplRequestBody -ContentType "application/x-www-form-urlencoded" -ErrorAction Stop
-    }
-    catch [System.Net.WebException] { 
-        $_.Exception.Message
-    }
-    if ($Response.StatusCode -eq 200) {
-        Return $Response.Content
-    }
-    else {
-        Write-Host "Error. HTTP Response code: [$($Response.StatusCode)]"
-    }
+    Return (Invoke-DeeplRequest -DeeplRequestBody $DeeplRequestBody -APIService "languages" -APIMode $APIMode)
 }
 
-    Export-ModuleMember -Function Get-DeeplTextTranslation
-    Export-ModuleMember -Function Get-DeeplUsage
-    Export-ModuleMember -Function Get-DeeplSupportedLanguages
+Export-ModuleMember -Function Get-DeeplTextTranslation
+Export-ModuleMember -Function Get-DeeplUsage
+Export-ModuleMember -Function Get-DeeplSupportedLanguages
 
-    # Todo
-    # function TranslateDocuments {
-    #    UploadDocument
-    #    CheckStatus
-    #    Downloading
-    # }
+# Todo
+# function TranslateDocuments {
+#    UploadDocument
+#    CheckStatus
+#    Downloading
+# }
